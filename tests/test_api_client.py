@@ -57,6 +57,15 @@ class TestHubEauClient:
             await client.async_get_communes_udi(MOCK_CODE_COMMUNE)
         assert exc_info.value.status == 500
 
+    async def test_get_latest_result_http_206_accepted(self, mock_session):
+        """Hub'Eau returns 206 when paginating — must be treated as success."""
+        resp = _make_mock_response(206, MOCK_LATEST_RESULT_RESPONSE)
+        mock_session.get = MagicMock(return_value=resp)
+        client = HubEauClient(mock_session)
+
+        result = await client.async_get_latest_result(MOCK_CODE_COMMUNE)
+        assert result["data"][0]["conformite_limites_bact_prelevement"] == "C"
+
     async def test_get_latest_result_success(self, mock_session):
         resp = _make_mock_response(200, MOCK_LATEST_RESULT_RESPONSE)
         mock_session.get = MagicMock(return_value=resp)

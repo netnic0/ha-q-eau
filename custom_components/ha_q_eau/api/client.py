@@ -35,10 +35,14 @@ class HubEauClient:
         self._session = session
 
     async def _get(self, endpoint: str, params: dict[str, Any] | None = None) -> Any:
-        """GET an endpoint and return parsed JSON."""
+        """GET an endpoint and return parsed JSON.
+
+        Hub'Eau returns HTTP 206 (Partial Content) when paginating with size < total count.
+        Both 200 and 206 carry valid JSON bodies and must be accepted.
+        """
         url = f"{_BASE_URL}{endpoint}"
         async with self._session.get(url, params=params) as resp:
-            if resp.status != 200:
+            if resp.status not in (200, 206):
                 raise HubEauApiError(resp.status, await resp.text())
             data: Any = await resp.json(content_type=None)
         if data is None:
