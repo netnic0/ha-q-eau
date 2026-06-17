@@ -30,7 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12", "3.13"]
+        include:
+          - python-version: "3.12"
+            phcc-version: "==0.13.205"
+          - python-version: "3.13"
+            phcc-version: "==0.13.205"
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -47,7 +51,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install pytest pytest-asyncio "pytest-homeassistant-custom-component==0.13.316"
+          pip install pytest pytest-asyncio "pytest-homeassistant-custom-component${{ matrix.phcc-version }}"
         timeout-minutes: 10
       - name: Run tests
         run: pytest tests/ -v
