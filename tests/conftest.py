@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -25,6 +26,26 @@ from custom_components.ha_q_eau.const import (
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
+
+@pytest.fixture(autouse=True)
+def _patch_thread_cleanup(monkeypatch):
+    """Exclude HA's _run_safe_shutdown_loop from the thread-leak check.
+
+    pytest-homeassistant-custom-component <=0.13.316 raises AssertionError in
+    its verify_cleanup fixture when the hass fixture starts a background thread
+    during integration setup. This thread is HA-internal and not caused by our
+    code. We patch threading.enumerate so that this daemon thread is invisible
+    to the leak check without affecting real test isolation.
+    """
+    original_enumerate = threading.enumerate
+
+    def _filtered_enumerate():
+        return [
+            t for t in original_enumerate()
+            if "_run_safe_shutdown_loop" not in t.name
+        ]
+
+    monkeypatch.setattr(threading, "enumerate", _filtered_enumerate)
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
