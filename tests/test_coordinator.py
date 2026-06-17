@@ -51,8 +51,8 @@ class TestParseCommunes:
 class TestParseLatestResult:
     def test_parse_latest_result_success(self):
         result = _parse_latest_result(MOCK_LATEST_RESULT_RESPONSE, NOW)
-        assert result.conformite_bact == "C"
-        assert result.conformite_pc == "C"
+        assert result.conformite_bact == "compliant"
+        assert result.conformite_pc == "compliant"
         assert result.nom_distributeur == "EAU DE PARIS"
         assert result.conclusion == "Eau conforme aux exigences de qualité."
 

@@ -86,8 +86,10 @@ class TestAsyncSetupEntry:
     ):
         await _setup_integration(hass, config_entry_data)
         all_states = hass.states.async_all("sensor")
+        # HA generates entity_id from the translated name, not the translation_key.
+        # In English: "Bacteriological conformity" → "bacteriological_conformity"
         bact_states = [
-            s for s in all_states if "conformity_bact" in s.entity_id
+            s for s in all_states if "bacteriological_conformity" in s.entity_id
         ]
         assert len(bact_states) == 1
         assert bact_states[0].state == "compliant"
