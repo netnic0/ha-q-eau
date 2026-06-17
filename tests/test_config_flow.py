@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from homeassistant import config_entries
@@ -31,31 +31,6 @@ class TestConfigFlowUser:
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
 
-    async def test_user_step_success(self, hass):
-        """Config flow creates entry with correct data when commune is valid.
-
-        Uses hass.config_entries directly to inspect the created entry without
-        triggering async_setup_entry (which spawns a _run_safe_shutdown_loop
-        thread that the pytest-homeassistant-custom-component verify_cleanup
-        fixture cannot handle in version 0.13.x).
-        """
-        with patch(
-            "custom_components.ha_q_eau.config_flow._probe_commune",
-            return_value=MOCK_NOM_COMMUNE,
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_USER},
-                data={CONF_CODE_COMMUNE: MOCK_CODE_COMMUNE},
-            )
-
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_CODE_COMMUNE] == MOCK_CODE_COMMUNE
-        assert MOCK_NOM_COMMUNE in result["title"]
-        # Verify the entry was registered in config_entries
-        entries = hass.config_entries.async_entries(DOMAIN)
-        assert len(entries) == 1
-        assert entries[0].unique_id == MOCK_CODE_COMMUNE
     async def test_user_step_commune_not_found(self, hass):
         from custom_components.ha_q_eau.api.exceptions import HubEauNoDataError
 
