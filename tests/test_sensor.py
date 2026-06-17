@@ -53,12 +53,12 @@ class TestConformitySensor:
     def test_conformity_bact_value(self, mock_coordinator):
         desc = next(d for d in CONFORMITY_SENSORS if d.key == "conformity_bact")
         sensor = QualiteEauConformitySensor(mock_coordinator, desc)
-        assert sensor.native_value == "C"
+        assert sensor.native_value == "compliant"
 
     def test_conformity_pc_value(self, mock_coordinator):
         desc = next(d for d in CONFORMITY_SENSORS if d.key == "conformity_pc")
         sensor = QualiteEauConformitySensor(mock_coordinator, desc)
-        assert sensor.native_value == "C"
+        assert sensor.native_value == "compliant"
 
     def test_conformity_bact_icon_compliant(self, mock_coordinator):
         desc = next(d for d in CONFORMITY_SENSORS if d.key == "conformity_bact")
@@ -73,8 +73,8 @@ class TestConformitySensor:
             nom_commune=MOCK_NOM_COMMUNE,
             nom_distributeur="EAU DE PARIS",
             date_prelevement=now,
-            conformite_bact="N",
-            conformite_pc="C",
+            conformite_bact="non_compliant",
+            conformite_pc="compliant",
             conclusion="Non conforme.",
             fetched_at=now,
         )

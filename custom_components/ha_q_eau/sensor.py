@@ -35,13 +35,13 @@ CONFORMITY_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="conformity_bact",
         translation_key="conformity_bact",
         device_class=SensorDeviceClass.ENUM,
-        options=["C", "N", "D", "S"],
+        options=["compliant", "non_compliant", "insufficient_data", "not_applicable"],
     ),
     SensorEntityDescription(
         key="conformity_pc",
         translation_key="conformity_pc",
         device_class=SensorDeviceClass.ENUM,
-        options=["C", "N", "D", "S"],
+        options=["compliant", "non_compliant", "insufficient_data", "not_applicable"],
     ),
     SensorEntityDescription(
         key="sample_date",
@@ -171,7 +171,9 @@ class QualiteEauParameterSensor(QualiteEauEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         param = self._find_reading()
-        return param.libelle_unite or None if param else None
+        if param is None:
+            return None
+        return param.libelle_unite or None
 
     @property
     def extra_state_attributes(self) -> dict | None:

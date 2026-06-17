@@ -39,19 +39,19 @@
       "conformity_bact": {
         "name": "Bacteriological conformity",
         "state": {
-          "C": "Compliant",
-          "N": "Non-compliant",
-          "D": "Insufficient data",
-          "S": "Not applicable"
+          "compliant": "Compliant",
+          "non_compliant": "Non-compliant",
+          "insufficient_data": "Insufficient data",
+          "not_applicable": "Not applicable"
         }
       },
       "conformity_pc": {
         "name": "Physico-chemical conformity",
         "state": {
-          "C": "Compliant",
-          "N": "Non-compliant",
-          "D": "Insufficient data",
-          "S": "Not applicable"
+          "compliant": "Compliant",
+          "non_compliant": "Non-compliant",
+          "insufficient_data": "Insufficient data",
+          "not_applicable": "Not applicable"
         }
       },
       "sample_date": { "name": "Sample date" },

@@ -14,6 +14,8 @@ from .api import HubEauApiError, HubEauClient, HubEauNoDataError
 from .api.models import CommuneInfo, ParameterReading, WaterQualityData, WaterQualityReading
 from .const import (
     CONF_CODE_COMMUNE,
+    CONFORMITY_CODE_INSUFFICIENT,
+    CONFORMITY_CODE_MAP,
     DEFAULT_SCAN_INTERVAL_H,
     DOMAIN,
     OPT_SCAN_INTERVAL_H,
@@ -142,6 +144,10 @@ def _parse_latest_result(raw: dict[str, Any], fetched_at: datetime) -> WaterQual
     raw_date = str(record.get("date_prelevement") or "")
     try:
         date_prelevement = datetime.fromisoformat(raw_date)
+        # Ensure timezone-aware — Hub'Eau returns naive datetimes (local/UTC ambiguous).
+        # HA requires timezone-aware datetimes for TIMESTAMP device class.
+        if date_prelevement.tzinfo is None:
+            date_prelevement = date_prelevement.replace(tzinfo=UTC)
     except (ValueError, TypeError):
         date_prelevement = fetched_at
 
@@ -150,8 +156,12 @@ def _parse_latest_result(raw: dict[str, Any], fetched_at: datetime) -> WaterQual
         nom_commune=str(record.get("nom_commune") or ""),
         nom_distributeur=str(record.get("nom_distributeur") or ""),
         date_prelevement=date_prelevement,
-        conformite_bact=str(record.get("conformite_limites_bact_prelevement") or "D"),
-        conformite_pc=str(record.get("conformite_limites_pc_prelevement") or "D"),
+        conformite_bact=CONFORMITY_CODE_MAP.get(
+            str(record.get("conformite_limites_bact_prelevement") or ""), CONFORMITY_CODE_INSUFFICIENT
+        ),
+        conformite_pc=CONFORMITY_CODE_MAP.get(
+            str(record.get("conformite_limites_pc_prelevement") or ""), CONFORMITY_CODE_INSUFFICIENT
+        ),
         conclusion=str(record.get("conclusion_conformite_prelevement") or ""),
         fetched_at=fetched_at,
     )
@@ -178,6 +188,9 @@ def _parse_parameters(raw: dict[str, Any]) -> tuple[ParameterReading, ...]:
         try:
             date_prelevement = datetime.fromisoformat(raw_date)
         except (ValueError, TypeError):
+            _LOGGER.debug(
+                "Skipping parameter %s: unparseable date %r", code_parametre, raw_date
+            )
             continue
 
         raw_num = record.get("resultat_numerique")

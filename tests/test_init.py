@@ -90,7 +90,7 @@ class TestAsyncSetupEntry:
             s for s in all_states if "conformity_bact" in s.entity_id
         ]
         assert len(bact_states) == 1
-        assert bact_states[0].state == "C"
+        assert bact_states[0].state == "compliant"
 
 
 class TestAsyncUnloadEntry:

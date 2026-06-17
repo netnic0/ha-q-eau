@@ -39,19 +39,19 @@
       "conformity_bact": {
         "name": "Conformité bactériologique",
         "state": {
-          "C": "Conforme",
-          "N": "Non conforme",
-          "D": "Données insuffisantes",
-          "S": "Sans objet"
+          "compliant": "Conforme",
+          "non_compliant": "Non conforme",
+          "insufficient_data": "Données insuffisantes",
+          "not_applicable": "Sans objet"
         }
       },
       "conformity_pc": {
         "name": "Conformité physico-chimique",
         "state": {
-          "C": "Conforme",
-          "N": "Non conforme",
-          "D": "Données insuffisantes",
-          "S": "Sans objet"
+          "compliant": "Conforme",
+          "non_compliant": "Non conforme",
+          "insufficient_data": "Données insuffisantes",
+          "not_applicable": "Sans objet"
         }
       },
       "sample_date": { "name": "Date du prélèvement" },

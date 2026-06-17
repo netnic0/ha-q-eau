@@ -40,5 +40,5 @@ class QualiteEauEntity(CoordinatorEntity["QualiteEauCoordinator"]):
             manufacturer=nom_distributeur,
             model="Hub'Eau qualite_eau_potable",
             configuration_url="https://hubeau.eaufrance.fr/page/api-qualite-eau-potable",
-            suggested_area="Maison",
+            suggested_area="Home",
         )

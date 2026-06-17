@@ -63,7 +63,7 @@ MOCK_LATEST_RESULT_RESPONSE = {
             "nom_commune": "PARIS",
             "nom_distributeur": "EAU DE PARIS",
             "code_departement": "75",
-            "date_prelevement": "2026-04-30T10:00:00",
+            "date_prelevement": "2026-04-30T10:00:00+00:00",
             "conformite_limites_bact_prelevement": "C",
             "conformite_limites_pc_prelevement": "C",
             "conclusion_conformite_prelevement": "Eau conforme aux exigences de qualité.",
@@ -82,7 +82,7 @@ MOCK_PARAMS_RESPONSE = {
             "resultat_alphanumerique": "12.5",
             "libelle_unite": "mg/L",
             "limite_qualite_parametre": "<=50 mg/L",
-            "date_prelevement": "2026-04-30T10:00:00",
+            "date_prelevement": "2026-04-30T10:00:00+00:00",
         },
         {
             "code_parametre": PARAM_PH,
@@ -91,7 +91,7 @@ MOCK_PARAMS_RESPONSE = {
             "resultat_alphanumerique": "7.4",
             "libelle_unite": "unité pH",
             "limite_qualite_parametre": "6.5-9 unité pH",
-            "date_prelevement": "2026-04-30T10:00:00",
+            "date_prelevement": "2026-04-30T10:00:00+00:00",
         },
         {
             "code_parametre": PARAM_TURBIDITY,
@@ -100,7 +100,7 @@ MOCK_PARAMS_RESPONSE = {
             "resultat_alphanumerique": "0.3",
             "libelle_unite": "NFU",
             "limite_qualite_parametre": "<=1 NFU",
-            "date_prelevement": "2026-04-30T10:00:00",
+            "date_prelevement": "2026-04-30T10:00:00+00:00",
         },
         {
             "code_parametre": PARAM_ECOLI,
@@ -109,7 +109,7 @@ MOCK_PARAMS_RESPONSE = {
             "resultat_alphanumerique": "<1",
             "libelle_unite": "n/(100mL)",
             "limite_qualite_parametre": "<=0 n/(100mL)",
-            "date_prelevement": "2026-04-30T10:00:00",
+            "date_prelevement": "2026-04-30T10:00:00+00:00",
         },
     ],
 }
@@ -162,8 +162,8 @@ def mock_water_quality_data() -> WaterQualityData:
         nom_commune=MOCK_NOM_COMMUNE,
         nom_distributeur="EAU DE PARIS",
         date_prelevement=datetime(2026, 4, 30, 10, 0, tzinfo=UTC),
-        conformite_bact="C",
-        conformite_pc="C",
+        conformite_bact="compliant",
+        conformite_pc="compliant",
         conclusion="Eau conforme aux exigences de qualité.",
         fetched_at=now,
     )

@@ -25,10 +25,18 @@ OPT_SCAN_INTERVAL_H_MAX: Final[int] = 168
 ISSUE_STALE_DATA: Final[str] = "stale_data"
 
 # ── Water quality conformity codes ───────────────────────────────────────────
-CONFORMITY_CODE_COMPLIANT: Final[str] = "C"
-CONFORMITY_CODE_NON_COMPLIANT: Final[str] = "N"
-CONFORMITY_CODE_INSUFFICIENT: Final[str] = "D"
-CONFORMITY_CODE_NOT_APPLICABLE: Final[str] = "S"
+# Raw API values (C/N/D/S) are mapped to HA-compliant slugs via CONFORMITY_CODE_MAP.
+CONFORMITY_CODE_COMPLIANT: Final[str] = "compliant"
+CONFORMITY_CODE_NON_COMPLIANT: Final[str] = "non_compliant"
+CONFORMITY_CODE_INSUFFICIENT: Final[str] = "insufficient_data"
+CONFORMITY_CODE_NOT_APPLICABLE: Final[str] = "not_applicable"
+
+CONFORMITY_CODE_MAP: Final[dict[str, str]] = {
+    "C": CONFORMITY_CODE_COMPLIANT,
+    "N": CONFORMITY_CODE_NON_COMPLIANT,
+    "D": CONFORMITY_CODE_INSUFFICIENT,
+    "S": CONFORMITY_CODE_NOT_APPLICABLE,
+}
 
 # ── Tracked parameter Sandre codes → sensor key ──────────────────────────────
 # Only these parameters get dedicated sensor entities.
