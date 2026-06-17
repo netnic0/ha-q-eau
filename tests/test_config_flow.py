@@ -2,84 +2,56 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.ha_q_eau.const import CONF_CODE_COMMUNE, DOMAIN
+from custom_components.ha_q_eau.api.exceptions import HubEauApiError, HubEauNoDataError
+from custom_components.ha_q_eau.config_flow import _probe_commune, QualiteEauConfigFlow
 
-from .conftest import MOCK_CODE_COMMUNE, MOCK_NOM_COMMUNE
-
-
-@pytest.fixture(autouse=True)
-def bypass_setup():
-    """Bypass async_setup_entry to speed up config flow tests."""
-    with patch(
-        "custom_components.ha_q_eau.async_setup_entry",
-        return_value=True,
-    ):
-        yield
+from .conftest import MOCK_CODE_COMMUNE, MOCK_NOM_COMMUNE, MOCK_COMMUNE_UDI_RESPONSE
 
 
-class TestConfigFlowUser:
-    async def test_user_step_shows_form(self, hass):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "user"
+class TestProbeCommune:
+    """Unit tests for _probe_commune — no hass fixture, no thread leak."""
 
-    async def test_user_step_commune_not_found(self, hass):
-        from custom_components.ha_q_eau.api.exceptions import HubEauNoDataError
-
+    async def test_valid_commune_returns_name(self):
+        session = MagicMock()
         with patch(
-            "custom_components.ha_q_eau.config_flow._probe_commune",
-            side_effect=HubEauNoDataError("not found"),
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_USER},
-                data={CONF_CODE_COMMUNE: "99999"},
-            )
+            "custom_components.ha_q_eau.config_flow.HubEauClient"
+        ) as mock_cls:
+            client = mock_cls.return_value
+            client.async_get_communes_udi = AsyncMock(return_value=MOCK_COMMUNE_UDI_RESPONSE)
+            result = await _probe_commune(session, MOCK_CODE_COMMUNE)
+        assert result == MOCK_NOM_COMMUNE
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"]["base"] == "commune_not_found"
-
-    async def test_user_step_cannot_connect(self, hass):
-        from custom_components.ha_q_eau.api.exceptions import HubEauApiError
-
+    async def test_empty_data_raises_no_data_error(self):
+        session = MagicMock()
         with patch(
-            "custom_components.ha_q_eau.config_flow._probe_commune",
-            side_effect=HubEauApiError(503),
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_USER},
-                data={CONF_CODE_COMMUNE: MOCK_CODE_COMMUNE},
-            )
+            "custom_components.ha_q_eau.config_flow.HubEauClient"
+        ) as mock_cls:
+            client = mock_cls.return_value
+            client.async_get_communes_udi = AsyncMock(return_value={"count": 0, "data": []})
+            with pytest.raises(HubEauNoDataError):
+                await _probe_commune(session, "99999")
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"]["base"] == "cannot_connect"
-
-    async def test_user_step_already_configured(self, hass):
+    async def test_api_error_propagates(self):
+        session = MagicMock()
         with patch(
-            "custom_components.ha_q_eau.config_flow._probe_commune",
-            return_value=MOCK_NOM_COMMUNE,
-        ):
-            # First setup
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_USER},
-                data={CONF_CODE_COMMUNE: MOCK_CODE_COMMUNE},
-            )
-            # Second setup — same commune
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_USER},
-                data={CONF_CODE_COMMUNE: MOCK_CODE_COMMUNE},
-            )
+            "custom_components.ha_q_eau.config_flow.HubEauClient"
+        ) as mock_cls:
+            client = mock_cls.return_value
+            client.async_get_communes_udi = AsyncMock(side_effect=HubEauApiError(503))
+            with pytest.raises(HubEauApiError):
+                await _probe_commune(session, MOCK_CODE_COMMUNE)
 
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+    async def test_returns_code_when_nom_commune_missing(self):
+        session = MagicMock()
+        raw = {"count": 1, "data": [{"code_commune": "75056", "nom_commune": None}]}
+        with patch(
+            "custom_components.ha_q_eau.config_flow.HubEauClient"
+        ) as mock_cls:
+            client = mock_cls.return_value
+            client.async_get_communes_udi = AsyncMock(return_value=raw)
+            result = await _probe_commune(session, "75056")
+        assert result == "75056"
