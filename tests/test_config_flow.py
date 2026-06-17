@@ -15,9 +15,14 @@ from .conftest import MOCK_CODE_COMMUNE, MOCK_NOM_COMMUNE
 
 @pytest.fixture(autouse=True)
 def bypass_setup():
-    """Bypass async_setup_entry to speed up config flow tests."""
+    """Bypass integration setup to prevent HA from spawning executor threads.
+
+    Patching async_setup_entry at the integration module level is not enough —
+    HA's ConfigEntries machinery still starts a _run_safe_shutdown_loop thread
+    before calling setup. Patching at the config_entries level stops it earlier.
+    """
     with patch(
-        "custom_components.ha_q_eau.async_setup_entry",
+        "homeassistant.config_entries.ConfigEntries.async_setup",
         return_value=True,
     ):
         yield
@@ -45,8 +50,6 @@ class TestConfigFlowUser:
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_CODE_COMMUNE] == MOCK_CODE_COMMUNE
         assert MOCK_NOM_COMMUNE in result["title"]
-        # Drain background tasks spawned by CREATE_ENTRY to avoid lingering threads
-        await hass.async_block_till_done()
 
     async def test_user_step_commune_not_found(self, hass):
         from custom_components.ha_q_eau.api.exceptions import HubEauNoDataError
