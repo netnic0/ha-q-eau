@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Drinking Water Quality (France)",
+        "description": "Enter the INSEE commune code (5 digits, e.g. 75056 for Paris). Find your code at https://geo.api.gouv.fr/communes",
+        "data": {
+          "code_commune": "INSEE commune code"
+        },
+        "data_description": {
+          "code_commune": "5-digit INSEE code (e.g. 75056). Different from the postal code."
+        }
+      }
+    },
+    "error": {
+      "commune_not_found": "Commune not found. Check the INSEE code (5 digits, e.g. 75056).",
+      "cannot_connect": "Unable to reach the Hub'Eau API. Check your internet connection.",
+      "unknown": "Unexpected error. Check the Home Assistant logs."
+    },
+    "abort": {
+      "already_configured": "This commune is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Drinking Water Quality options",
+        "data": {
+          "scan_interval_h": "Update interval (hours)"
+        },
+        "data_description": {
+          "scan_interval_h": "Hub'Eau data is refreshed monthly. A daily update (24h) is sufficient."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "conformity_bact": {
+        "name": "Bacteriological conformity",
+        "state": {
+          "C": "Compliant",
+          "N": "Non-compliant",
+          "D": "Insufficient data",
+          "S": "Not applicable"
+        }
+      },
+      "conformity_pc": {
+        "name": "Physico-chemical conformity",
+        "state": {
+          "C": "Compliant",
+          "N": "Non-compliant",
+          "D": "Insufficient data",
+          "S": "Not applicable"
+        }
+      },
+      "sample_date": { "name": "Sample date" },
+      "data_age_hours": { "name": "Data age" },
+      "distributor": { "name": "Water distributor" },
+      "param_nitrates": { "name": "Nitrates" },
+      "param_turbidity": { "name": "Turbidity" },
+      "param_ph": { "name": "pH" },
+      "param_ecoli": { "name": "Escherichia coli" },
+      "param_enterococcus": { "name": "Enterococcus" },
+      "param_chlorine": { "name": "Residual chlorine" },
+      "param_hardness": { "name": "Hardness (TH)" },
+      "param_fluoride": { "name": "Fluoride" }
+    }
+  },
+  "issues": {
+    "stale_data": {
+      "title": "Stale drinking water data",
+      "description": "Data for commune `{code_commune}` is **{age_h} hours** old."
+    }
+  }
+}

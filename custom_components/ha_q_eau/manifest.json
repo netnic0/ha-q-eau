@@ -1,0 +1,19 @@
+{
+  "domain": "ha_q_eau",
+  "name": "Qualité Eau Potable (France)",
+  "codeowners": [
+    "@netnic0"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/netnic0/ha-q-eau",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/netnic0/ha-q-eau/issues",
+  "loggers": [
+    "custom_components.ha_q_eau"
+  ],
+  "quality_scale": "bronze",
+  "requirements": [],
+  "single_config_entry": false,
+  "version": "0.1.0"
+}

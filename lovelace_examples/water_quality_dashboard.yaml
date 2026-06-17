@@ -1,0 +1,133 @@
+# Example Lovelace dashboard for ha_q_eau — Qualité de l'eau potable
+#
+# Prerequisites (HACS frontend cards):
+#   - mushroom (recommended)
+#   - apexcharts-card (optional — for trend chart)
+#
+# Placeholder: replace YOUR_COMMUNE_CODE with your INSEE code (e.g. 75056)
+# Entity IDs follow the pattern: sensor.qualite_eau_<nom_commune>_<key>
+# Example for Paris: sensor.qualite_eau_paris_conformity_bact
+#
+# Find your INSEE code: https://geo.api.gouv.fr/communes?codePostal=<votre_CP>
+
+title: Qualité Eau Potable
+views:
+  - title: Qualité Eau
+    icon: mdi:water-check
+    type: sections
+    sections:
+
+      # ── Section 1 : Conformité globale ────────────────────────────────────
+      - title: Conformité
+        type: grid
+        columns: 2
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Bactériologique
+            secondary: >-
+              {% set v = states('sensor.qualite_eau_YOUR_COMMUNE_CODE_conformity_bact') %}
+              {% if v == 'C' %}✅ Conforme
+              {% elif v == 'N' %}🚨 Non conforme
+              {% elif v == 'D' %}⚠️ Données insuffisantes
+              {% else %}— Sans objet{% endif %}
+            icon: >-
+              {% set v = states('sensor.qualite_eau_YOUR_COMMUNE_CODE_conformity_bact') %}
+              {% if v == 'C' %}mdi:water-check
+              {% elif v == 'N' %}mdi:water-alert
+              {% else %}mdi:water-question{% endif %}
+            icon_color: >-
+              {% set v = states('sensor.qualite_eau_YOUR_COMMUNE_CODE_conformity_bact') %}
+              {% if v == 'C' %}green{% elif v == 'N' %}red{% else %}grey{% endif %}
+            tap_action:
+              action: more-info
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_conformity_bact
+
+          - type: custom:mushroom-template-card
+            primary: Physico-chimique
+            secondary: >-
+              {% set v = states('sensor.qualite_eau_YOUR_COMMUNE_CODE_conformity_pc') %}
+              {% if v == 'C' %}✅ Conforme
+              {% elif v == 'N' %}🚨 Non conforme
+              {% elif v == 'D' %}⚠️ Données insuffisantes
+              {% else %}— Sans objet{% endif %}
+            icon: >-
+              {% set v = states('sensor.qualite_eau_YOUR_COMMUNE_CODE_conformity_pc') %}
+              {% if v == 'C' %}mdi:flask-outline
+              {% elif v == 'N' %}mdi:flask-remove{% else %}mdi:flask-empty-outline{% endif %}
+            icon_color: >-
+              {% set v = states('sensor.qualite_eau_YOUR_COMMUNE_CODE_conformity_pc') %}
+              {% if v == 'C' %}green{% elif v == 'N' %}red{% else %}grey{% endif %}
+            tap_action:
+              action: more-info
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_conformity_pc
+
+      # ── Section 2 : Paramètres clés ───────────────────────────────────────
+      - title: Paramètres
+        type: grid
+        columns: 4
+        cards:
+          - type: tile
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_param_nitrates
+            name: Nitrates
+            icon: mdi:molecule
+            color: >-
+              {% set v = states('sensor.qualite_eau_YOUR_COMMUNE_CODE_param_nitrates') | float(0) %}
+              {% if v <= 25 %}green{% elif v <= 50 %}orange{% else %}red{% endif %}
+
+          - type: tile
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_param_ph
+            name: pH
+            icon: mdi:ph
+
+          - type: tile
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_param_turbidity
+            name: Turbidité
+            icon: mdi:water-opacity
+
+          - type: tile
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_param_hardness
+            name: Dureté (TH)
+            icon: mdi:water-percent
+
+          - type: tile
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_param_ecoli
+            name: E. coli
+            icon: mdi:bacteria
+            color: >-
+              {% set v = states('sensor.qualite_eau_YOUR_COMMUNE_CODE_param_ecoli') | float(-1) %}
+              {% if v == 0 %}green{% elif v > 0 %}red{% else %}grey{% endif %}
+
+          - type: tile
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_param_chlorine
+            name: Chlore
+            icon: mdi:water-boiler
+
+          - type: tile
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_param_fluoride
+            name: Fluorures
+            icon: mdi:tooth-outline
+
+          - type: tile
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_param_enterococcus
+            name: Entérocoques
+            icon: mdi:bacteria-outline
+
+      # ── Section 3 : Diagnostics ───────────────────────────────────────────
+      - title: Diagnostics
+        type: grid
+        columns: 3
+        cards:
+          - type: tile
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_sample_date
+            name: Date du prélèvement
+            icon: mdi:calendar-check
+
+          - type: tile
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_data_age_hours
+            name: Ancienneté données
+            icon: mdi:clock-outline
+
+          - type: tile
+            entity: sensor.qualite_eau_YOUR_COMMUNE_CODE_distributor
+            name: Distributeur
+            icon: mdi:office-building

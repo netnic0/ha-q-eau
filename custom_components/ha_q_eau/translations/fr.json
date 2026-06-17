@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Qualité de l'eau potable",
+        "description": "Entrez le code INSEE de votre commune (5 chiffres, ex: 75056 pour Paris). Trouvez votre code sur https://geo.api.gouv.fr/communes",
+        "data": {
+          "code_commune": "Code INSEE de la commune"
+        },
+        "data_description": {
+          "code_commune": "Code INSEE à 5 chiffres (ex: 75056). Différent du code postal."
+        }
+      }
+    },
+    "error": {
+      "commune_not_found": "Commune introuvable. Vérifiez le code INSEE (5 chiffres, ex: 75056).",
+      "cannot_connect": "Impossible de joindre l'API Hub'Eau. Vérifiez votre connexion.",
+      "unknown": "Erreur inattendue. Consultez les journaux Home Assistant."
+    },
+    "abort": {
+      "already_configured": "Cette commune est déjà configurée."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options Qualité Eau",
+        "data": {
+          "scan_interval_h": "Intervalle de mise à jour (heures)"
+        },
+        "data_description": {
+          "scan_interval_h": "Les données Hub'Eau sont actualisées mensuellement. Une mise à jour quotidienne (24h) est suffisante."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "conformity_bact": {
+        "name": "Conformité bactériologique",
+        "state": {
+          "C": "Conforme",
+          "N": "Non conforme",
+          "D": "Données insuffisantes",
+          "S": "Sans objet"
+        }
+      },
+      "conformity_pc": {
+        "name": "Conformité physico-chimique",
+        "state": {
+          "C": "Conforme",
+          "N": "Non conforme",
+          "D": "Données insuffisantes",
+          "S": "Sans objet"
+        }
+      },
+      "sample_date": { "name": "Date du prélèvement" },
+      "data_age_hours": { "name": "Ancienneté des données" },
+      "distributor": { "name": "Distributeur" },
+      "param_nitrates": { "name": "Nitrates" },
+      "param_turbidity": { "name": "Turbidité" },
+      "param_ph": { "name": "pH" },
+      "param_ecoli": { "name": "Escherichia coli" },
+      "param_enterococcus": { "name": "Entérocoques" },
+      "param_chlorine": { "name": "Chlore résiduel" },
+      "param_hardness": { "name": "Dureté (TH)" },
+      "param_fluoride": { "name": "Fluorures" }
+    }
+  },
+  "issues": {
+    "stale_data": {
+      "title": "Données eau potable périmées",
+      "description": "Les données de la commune `{code_commune}` ont **{age_h} heures**."
+    }
+  }
+}
