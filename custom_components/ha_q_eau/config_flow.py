@@ -83,6 +83,9 @@ class QualiteEauConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=_STEP_USER_SCHEMA,
             errors=errors,
+            description_placeholders={
+                "geo_api_url": "https://geo.api.gouv.fr/communes",
+            },
         )
 
     @staticmethod

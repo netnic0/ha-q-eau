@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Drinking Water Quality (France)",
-        "description": "Enter the INSEE commune code (5 digits, e.g. 75056 for Paris). Find your code at https://geo.api.gouv.fr/communes",
+        "description": "Enter the INSEE commune code (5 digits, e.g. 75056 for Paris). Different from the postal code. Find yours at [geo.api.gouv.fr]({geo_api_url})",
         "data": {
           "code_commune": "INSEE commune code"
         },

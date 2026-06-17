@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Qualité de l'eau potable",
-        "description": "Entrez le code INSEE de votre commune (5 chiffres, ex: 75056 pour Paris). Trouvez votre code sur https://geo.api.gouv.fr/communes",
+        "description": "Entrez le code INSEE de votre commune (5 chiffres, ex: 75056 pour Paris). Différent du code postal. Trouvez le vôtre sur [geo.api.gouv.fr]({geo_api_url})",
         "data": {
           "code_commune": "Code INSEE de la commune"
         },
