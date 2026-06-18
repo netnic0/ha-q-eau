@@ -105,7 +105,17 @@ def _value_data_age_hours(d: WaterQualityData, _: str | None) -> float:
 
 
 def _value_distributor(d: WaterQualityData, _: str | None) -> str:
-    return d.latest_reading.nom_distributeur or d.commune_info.nom_distributeur
+    """Return the water distributor name with the same fallback chain as the device.
+
+    `entity.py` falls back to "Hub'Eau" when both reading and commune_info are
+    empty. The sensor state must agree with the device manufacturer to avoid
+    UI inconsistency for small communes whose Hub'Eau record has no distributor.
+    """
+    return (
+        d.latest_reading.nom_distributeur
+        or d.commune_info.nom_distributeur
+        or "Hub'Eau"
+    )
 
 
 def _icon_conformity(d: WaterQualityData, key: str | None) -> str:
@@ -308,10 +318,12 @@ class QualiteEauSensor(QualiteEauEntity, SensorEntity):
 
 
 # ── Backwards-compatible aliases ────────────────────────────────────────────
-# Tests still import these names; map them to the new unified class so the
-# refactor does not require simultaneous test rewrites.
-QualiteEauConformitySensor = QualiteEauSensor
-QualiteEauParameterSensor = QualiteEauSensor
+# Removed in this refactor: the old QualiteEauConformitySensor /
+# QualiteEauParameterSensor classes had different constructor signatures than
+# the unified QualiteEauSensor (the parameter class took a third positional
+# `code_parametre` arg now stored on the description). Keeping them as bare
+# aliases would silently raise TypeError on the old 3-arg call form. Callers
+# (including tests) must migrate to QualiteEauSensor explicitly.
 
 
 async def async_setup_entry(

@@ -13,7 +13,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HubEauApiError, HubEauClient, HubEauNoDataError
-from .api.models import CommuneInfo, ParameterReading, WaterQualityData, WaterQualityReading
+from .api.models import (
+    CommuneInfo,
+    ParameterReading,
+    WaterQualityData,
+    WaterQualityReading,
+    make_parameters_by_code,
+)
 from .const import (
     CONF_CODE_COMMUNE,
     CONFORMITY_CODE_INSUFFICIENT,
@@ -116,6 +122,7 @@ class QualiteEauCoordinator(DataUpdateCoordinator[WaterQualityData]):
             commune_info=self._commune_info,
             latest_reading=latest_reading,
             parameters=parameters,
+            parameters_by_code=make_parameters_by_code(parameters),
         )
 
 

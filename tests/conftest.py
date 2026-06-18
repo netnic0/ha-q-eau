@@ -13,6 +13,7 @@ from custom_components.ha_q_eau.api.models import (
     ParameterReading,
     WaterQualityData,
     WaterQualityReading,
+    make_parameters_by_code,
 )
 from custom_components.ha_q_eau.const import (
     CONF_CODE_COMMUNE,
@@ -211,4 +212,5 @@ def mock_water_quality_data() -> WaterQualityData:
         commune_info=commune_info,
         latest_reading=reading,
         parameters=params,
+        parameters_by_code=make_parameters_by_code(params),
     )
