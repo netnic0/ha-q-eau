@@ -146,7 +146,6 @@ def mock_api_client():
         client.async_get_communes_udi = AsyncMock(return_value=MOCK_COMMUNE_UDI_RESPONSE)
         client.async_get_latest_result = AsyncMock(return_value=MOCK_LATEST_RESULT_RESPONSE)
         client.async_get_recent_parameters = AsyncMock(return_value=MOCK_PARAMS_RESPONSE)
-        client.async_validate_commune = AsyncMock(return_value=True)
         yield client
 
 

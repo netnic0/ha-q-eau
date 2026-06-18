@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from types import MappingProxyType
+from typing import Mapping
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,3 +81,16 @@ class WaterQualityData:
     latest_reading: WaterQualityReading
     parameters: tuple[ParameterReading, ...] = field(default_factory=tuple)
     """Recent individual parameter readings (last sample per parameter)."""
+
+    @property
+    def parameters_by_code(self) -> Mapping[str, ParameterReading]:
+        """Return parameters indexed by their Sandre code.
+
+        Used by sensor entities for O(1) lookup instead of repeatedly
+        scanning the parameters tuple (was 24 linear scans per render
+        cycle with 8 parameter sensors × 3 properties each).
+
+        Wrapped in MappingProxyType to keep the snapshot conceptually
+        immutable in line with the frozen dataclass.
+        """
+        return MappingProxyType({p.code_parametre: p for p in self.parameters})

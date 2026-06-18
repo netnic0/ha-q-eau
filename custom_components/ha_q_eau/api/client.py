@@ -113,14 +113,3 @@ class HubEauClient:
         if not isinstance(data, dict):
             raise HubEauNoDataError(f"Expected dict from resultats_dis (params), got {type(data)}")
         return data
-
-    async def async_validate_commune(self, code_commune: str) -> bool:
-        """Return True if the INSEE code has at least one UDI record.
-
-        Used during config flow validation.
-        """
-        try:
-            result = await self.async_get_communes_udi(code_commune)
-            return int(result.get("count", 0)) > 0
-        except (HubEauApiError, HubEauNoDataError):
-            return False

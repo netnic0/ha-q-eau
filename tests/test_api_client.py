@@ -91,25 +91,3 @@ class TestHubEauClient:
         result = await client.async_get_recent_parameters(MOCK_CODE_COMMUNE)
 
         assert len(result["data"]) == 4
-
-    async def test_validate_commune_true(self, mock_session):
-        resp = _make_mock_response(200, MOCK_COMMUNE_UDI_RESPONSE)
-        mock_session.get = MagicMock(return_value=resp)
-        client = HubEauClient(mock_session)
-
-        assert await client.async_validate_commune(MOCK_CODE_COMMUNE) is True
-
-    async def test_validate_commune_false_on_empty(self, mock_session):
-        resp = _make_mock_response(200, {"count": 0, "data": []})
-        mock_session.get = MagicMock(return_value=resp)
-        client = HubEauClient(mock_session)
-
-        assert await client.async_validate_commune("99999") is False
-
-    async def test_validate_commune_false_on_error(self, mock_session):
-        resp = _make_mock_response(404, {})
-        resp.text = AsyncMock(return_value="Not Found")
-        mock_session.get = MagicMock(return_value=resp)
-        client = HubEauClient(mock_session)
-
-        assert await client.async_validate_commune("00000") is False

@@ -21,8 +21,11 @@ DEFAULT_SCAN_INTERVAL_H: Final[int] = 24
 OPT_SCAN_INTERVAL_H_MIN: Final[int] = 6
 OPT_SCAN_INTERVAL_H_MAX: Final[int] = 168
 
-# ── Repair issue identifiers ─────────────────────────────────────────────────
-ISSUE_STALE_DATA: Final[str] = "stale_data"
+# ── Coordinator: parameter history lookback ─────────────────────────────────
+# Hub'Eau publishes monthly; 90 days covers the last few sample cycles, leaves
+# enough room when a commune skips a month, and stays small enough that a single
+# size=200 page returns everything for any French commune.
+PARAM_LOOKBACK_DAYS: Final[int] = 90
 
 # ── Water quality conformity codes ───────────────────────────────────────────
 # Raw API values (C/N/D/S) are mapped to HA-compliant slugs via CONFORMITY_CODE_MAP.
@@ -58,4 +61,20 @@ TRACKED_PARAMS: Final[dict[str, str]] = {
     PARAM_CHLORINE: "chlorine",
     PARAM_HARDNESS: "hardness",
     PARAM_FLUORIDE: "fluoride",
+}
+
+# ── Canonical units for tracked parameters ──────────────────────────────────
+# Used as a fallback when the Hub'Eau API returns an empty libelle_unite.
+# The API value (when present) takes precedence to avoid HA long-term-statistics
+# unit-mismatch warnings if Hub'Eau ever changes its labels (e.g. "mg/l" → "mg/L").
+# Codes that map to None are dimensionless (pH).
+PARAM_UNITS: Final[dict[str, str | None]] = {
+    PARAM_NITRATES: "mg/L",
+    PARAM_TURBIDITY: "NFU",
+    PARAM_PH: None,
+    PARAM_ECOLI: "n/(100mL)",
+    PARAM_ENTEROCOCCUS: "n/(100mL)",
+    PARAM_CHLORINE: "mg/L",
+    PARAM_HARDNESS: "°f",
+    PARAM_FLUORIDE: "mg/L",
 }
