@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .coordinator import QualiteEauConfigEntry, QualiteEauCoordinator
@@ -24,12 +25,18 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return a JSON-serialisable dump of the entry + coordinator state.
 
-    `entry.runtime_data` is set by `async_setup_entry`; for an unloaded or
-    pre-setup entry HA leaves the attribute as the sentinel `UNDEFINED`.
-    `getattr(..., None)` collapses the sentinel to `None` so the diagnostics
-    dump degrades gracefully and remains JSON-serialisable.
+    `entry.runtime_data` is *always present* on HA 2024.6+ ConfigEntry — it is
+    initialised to the `UNDEFINED` sentinel before `async_setup_entry` runs,
+    not absent. So `getattr(entry, "runtime_data", None)` would return the
+    sentinel, not `None`, on a pre-setup entry, and a downstream
+    `coordinator.last_update_success` access would raise `AttributeError`.
+    The state-based guard below is the canonical HA pattern: read
+    `runtime_data` only when the entry is `LOADED`, otherwise treat the
+    coordinator as absent.
     """
-    coordinator: QualiteEauCoordinator | None = getattr(entry, "runtime_data", None)
+    coordinator: QualiteEauCoordinator | None = (
+        entry.runtime_data if entry.state == ConfigEntryState.LOADED else None
+    )
 
     return {
         "entry": {
