@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/netnic0/ha-q-eau/compare/ha-q-eau-v0.3.0...ha-q-eau-v0.4.0) (2026-06-19)
+
+
+### Features
+
+* **runtime-data:** migrate to entry.runtime_data (HA 2024.6+) ([#6](https://github.com/netnic0/ha-q-eau/issues/6)) ([44e95ea](https://github.com/netnic0/ha-q-eau/commit/44e95eae50f87fd436582c50106ec6c8ccb390c9))
+
 ## [0.3.0](https://github.com/netnic0/ha-q-eau/compare/ha-q-eau-v0.2.1...ha-q-eau-v0.3.0) (2026-06-19)
 
 
