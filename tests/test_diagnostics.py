@@ -97,10 +97,16 @@ class TestAsyncGetConfigEntryDiagnostics:
         """Entry without an active coordinator (edge case) returns None for data.
 
         Models the pre-setup / ghost-entry scenario: the entry exists but
-        `async_setup_entry` has not run, so `runtime_data` was never set.
-        Diagnostics must not crash and must report None for both data and
-        last_update_success.
+        `async_setup_entry` has not run, so the entry state is not LOADED.
+        The diagnostics implementation MUST gate on `entry.state` rather than
+        on `runtime_data` truthiness, because HA 2024.6+ initialises
+        `runtime_data` to the `UNDEFINED` sentinel — not to `None` — on a
+        pre-setup entry. This test simulates that path with a non-LOADED
+        state and a runtime_data that is NOT pre-set to None, locking in
+        the canonical state-based guard.
         """
+        from homeassistant.config_entries import ConfigEntryState
+
         entry = MagicMock(spec=ConfigEntry)
         entry.entry_id = "ghost_entry"
         entry.title = "Ghost"
@@ -109,10 +115,11 @@ class TestAsyncGetConfigEntryDiagnostics:
         entry.data = {CONF_CODE_COMMUNE: MOCK_CODE_COMMUNE}
         entry.options = {}
         entry.unique_id = MOCK_CODE_COMMUNE
-        # Explicitly clear runtime_data — MagicMock(spec=ConfigEntry) auto-creates
-        # the attribute as another MagicMock if it exists on the spec class, and
-        # we want a deterministic None to exercise the diagnostics fallback path.
-        entry.runtime_data = None
+        # Deliberately NOT setting entry.runtime_data — MagicMock(spec=ConfigEntry)
+        # auto-generates a child MagicMock for it, mimicking the UNDEFINED sentinel
+        # behaviour where `entry.runtime_data` is some non-None object that
+        # `getattr(..., None)` would NOT collapse to None.
+        entry.state = ConfigEntryState.NOT_LOADED
 
         diag = await async_get_config_entry_diagnostics(hass, entry)
         assert diag["coordinator"]["data"] is None
