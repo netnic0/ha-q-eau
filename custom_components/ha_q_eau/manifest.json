@@ -12,7 +12,7 @@
   "loggers": [
     "custom_components.ha_q_eau"
   ],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": [],
   "single_config_entry": false,
   "version": "0.2.1"
