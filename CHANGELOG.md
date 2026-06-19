@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/netnic0/ha-q-eau/compare/ha-q-eau-v0.2.1...ha-q-eau-v0.3.0) (2026-06-19)
+
+
+### Features
+
+* **quality:** promote integration to Silver tier ([#4](https://github.com/netnic0/ha-q-eau/issues/4)) ([314a4d5](https://github.com/netnic0/ha-q-eau/commit/314a4d5e1d0df50a60e58a8409c862ce410b7134))
+
 ## [0.2.1](https://github.com/netnic0/ha-q-eau/compare/ha-q-eau-v0.2.0...ha-q-eau-v0.2.1) (2026-06-17)
 
 
