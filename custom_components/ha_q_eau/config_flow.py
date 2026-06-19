@@ -20,23 +20,33 @@ from .const import (
     OPT_SCAN_INTERVAL_H_MAX,
     OPT_SCAN_INTERVAL_H_MIN,
 )
-
 _LOGGER = logging.getLogger(__name__)
 
 _STEP_USER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_CODE_COMMUNE): str,
+        # INSEE commune code is exactly 5 digits (e.g. Paris=75056, Lyon-1=69123).
+        # Strip whitespace first so " 75056 " is accepted; then validate the digit pattern
+        # client-side to avoid a needless API round-trip on obviously invalid input.
+        vol.Required(CONF_CODE_COMMUNE): vol.All(
+            str,
+            lambda v: v.strip(),
+            vol.Match(r"^\d{5}$"),
+        ),
     }
 )
 
 
-async def _probe_commune(session: Any, code_commune: str) -> str:
+async def _probe_commune(client: HubEauClient, code_commune: str) -> str:
     """Validate the INSEE code and return the commune name.
 
-    Raises HubEauNoDataError if the code returns no UDI records.
-    Raises HubEauApiError on HTTP errors.
+    The client is injected so the function stays testable without patching
+    the HubEauClient constructor and so the canonical client construction
+    happens in a single place (async_step_user → async_get_clientsession).
+
+    Raises:
+        HubEauNoDataError: code_commune returns no UDI records.
+        HubEauApiError: HTTP error from the Hub'Eau API.
     """
-    client = HubEauClient(session)
     raw = await client.async_get_communes_udi(code_commune)
     records = raw.get("data", [])
     if not records:
@@ -56,11 +66,12 @@ class QualiteEauConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            code_commune = user_input[CONF_CODE_COMMUNE].strip()
+            code_commune = user_input[CONF_CODE_COMMUNE]
             session = async_get_clientsession(self.hass)
+            client = HubEauClient(session)
 
             try:
-                nom_commune = await _probe_commune(session, code_commune)
+                nom_commune = await _probe_commune(client, code_commune)
             except HubEauNoDataError:
                 errors["base"] = "commune_not_found"
             except HubEauApiError:

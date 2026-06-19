@@ -55,7 +55,7 @@
         }
       },
       "sample_date": { "name": "Date du prélèvement" },
-      "data_age_hours": { "name": "Ancienneté des données" },
+      "data_age_hours": { "name": "Dernier rafraîchissement" },
       "distributor": { "name": "Distributeur" },
       "param_nitrates": { "name": "Nitrates" },
       "param_turbidity": { "name": "Turbidité" },
@@ -65,12 +65,6 @@
       "param_chlorine": { "name": "Chlore résiduel" },
       "param_hardness": { "name": "Dureté (TH)" },
       "param_fluoride": { "name": "Fluorures" }
-    }
-  },
-  "issues": {
-    "stale_data": {
-      "title": "Données eau potable périmées",
-      "description": "Les données de la commune `{code_commune}` ont **{age_h} heures**."
     }
   }
 }

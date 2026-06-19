@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HubEauApiError, HubEauClient, HubEauNoDataError
-from .api.models import CommuneInfo, ParameterReading, WaterQualityData, WaterQualityReading
+from .api.models import (
+    CommuneInfo,
+    ParameterReading,
+    WaterQualityData,
+    WaterQualityReading,
+    make_parameters_by_code,
+)
 from .const import (
     CONF_CODE_COMMUNE,
     CONFORMITY_CODE_INSUFFICIENT,
@@ -19,12 +27,11 @@ from .const import (
     DEFAULT_SCAN_INTERVAL_H,
     DOMAIN,
     OPT_SCAN_INTERVAL_H,
+    PARAM_LOOKBACK_DAYS,
     TRACKED_PARAMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-_PARAM_LOOKBACK_DAYS = 90
 
 
 class QualiteEauCoordinator(DataUpdateCoordinator[WaterQualityData]):
@@ -57,12 +64,23 @@ class QualiteEauCoordinator(DataUpdateCoordinator[WaterQualityData]):
         )
 
     async def async_setup(self) -> None:
-        """Fetch static commune/UDI metadata once at integration setup."""
+        """Fetch static commune/UDI metadata once at integration setup.
+
+        UDI metadata is non-critical: when it fails, the coordinator falls back to
+        the seeded CommuneInfo from the config entry. We narrow the except clause
+        to the known network/API failure modes so genuine bugs (e.g. parser
+        TypeErrors) propagate and surface in CI/logs instead of being swallowed.
+        """
         code_commune: str = self.config_entry.data[CONF_CODE_COMMUNE]
         try:
             raw_udi = await self._client.async_get_communes_udi(code_commune)
             self._commune_info = _parse_communes_udi(code_commune, raw_udi)
-        except Exception as err:
+        except (
+            HubEauApiError,
+            HubEauNoDataError,
+            aiohttp.ClientError,
+            asyncio.TimeoutError,
+        ) as err:
             _LOGGER.warning("Could not fetch UDI metadata for %s: %s", code_commune, err)
 
     async def _async_update_data(self) -> WaterQualityData:
@@ -76,25 +94,35 @@ class QualiteEauCoordinator(DataUpdateCoordinator[WaterQualityData]):
             raise UpdateFailed(f"Hub'Eau API error: {err}") from err
         except HubEauNoDataError as err:
             raise UpdateFailed(f"Hub'Eau no data: {err}") from err
-        except Exception as err:
-            raise UpdateFailed(f"Unexpected error: {err}") from err
+        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
+            raise UpdateFailed(f"Hub'Eau network error: {err}") from err
 
         latest_reading = _parse_latest_result(raw_latest, now)
 
         parameters: tuple[ParameterReading, ...] = ()
-        date_min = (now - timedelta(days=_PARAM_LOOKBACK_DAYS)).strftime("%Y-%m-%d")
+        date_min = (now - timedelta(days=PARAM_LOOKBACK_DAYS)).strftime("%Y-%m-%d")
         try:
             raw_params = await self._client.async_get_recent_parameters(
                 code_commune, date_min=date_min
             )
             parameters = _parse_parameters(raw_params)
-        except Exception as err:
-            _LOGGER.debug("Could not fetch parameter details for %s: %s", code_commune, err)
+        except (
+            HubEauApiError,
+            HubEauNoDataError,
+            aiohttp.ClientError,
+            asyncio.TimeoutError,
+        ) as err:
+            # Parameter detail is best-effort: missing params should not fail the
+            # whole coordinator update — conformity sensors still publish a value.
+            _LOGGER.warning(
+                "Could not fetch parameter details for %s: %s", code_commune, err
+            )
 
         return WaterQualityData(
             commune_info=self._commune_info,
             latest_reading=latest_reading,
             parameters=parameters,
+            parameters_by_code=make_parameters_by_code(parameters),
         )
 
 
@@ -187,6 +215,11 @@ def _parse_parameters(raw: dict[str, Any]) -> tuple[ParameterReading, ...]:
         raw_date = str(record.get("date_prelevement") or "")
         try:
             date_prelevement = datetime.fromisoformat(raw_date)
+            # Ensure timezone-aware — Hub'Eau returns naive datetimes.
+            # Mirror the pattern in _parse_latest_result to avoid mixing aware/naive
+            # datetimes between conformity sensors and parameter sensors.
+            if date_prelevement.tzinfo is None:
+                date_prelevement = date_prelevement.replace(tzinfo=UTC)
         except (ValueError, TypeError):
             _LOGGER.debug(
                 "Skipping parameter %s: unparseable date %r", code_parametre, raw_date

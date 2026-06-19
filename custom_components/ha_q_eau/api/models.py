@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from types import MappingProxyType
+from typing import Mapping
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,3 +81,28 @@ class WaterQualityData:
     latest_reading: WaterQualityReading
     parameters: tuple[ParameterReading, ...] = field(default_factory=tuple)
     """Recent individual parameter readings (last sample per parameter)."""
+
+    parameters_by_code: Mapping[str, ParameterReading] = field(
+        default_factory=lambda: MappingProxyType({})
+    )
+    """Parameters indexed by their Sandre code for O(1) sensor lookup.
+
+    Populated once per coordinator update from `parameters` (via
+    `make_parameters_by_code` below). Pre-computing here — instead of as
+    a @property recomputed at every sensor render — avoids rebuilding the
+    dict on every `native_value` / `native_unit_of_measurement` /
+    `extra_state_attributes` call (was 24 dict allocations per render
+    cycle with 8 parameter sensors × 3 properties each).
+    """
+
+
+def make_parameters_by_code(
+    parameters: tuple[ParameterReading, ...],
+) -> Mapping[str, ParameterReading]:
+    """Build an immutable code→reading lookup from a parameters tuple.
+
+    Helper used by the coordinator to populate `WaterQualityData.parameters_by_code`
+    once per refresh. MappingProxyType keeps the snapshot conceptually immutable
+    in line with the frozen dataclass.
+    """
+    return MappingProxyType({p.code_parametre: p for p in parameters})

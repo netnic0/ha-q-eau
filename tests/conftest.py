@@ -13,6 +13,7 @@ from custom_components.ha_q_eau.api.models import (
     ParameterReading,
     WaterQualityData,
     WaterQualityReading,
+    make_parameters_by_code,
 )
 from custom_components.ha_q_eau.const import (
     CONF_CODE_COMMUNE,
@@ -146,7 +147,6 @@ def mock_api_client():
         client.async_get_communes_udi = AsyncMock(return_value=MOCK_COMMUNE_UDI_RESPONSE)
         client.async_get_latest_result = AsyncMock(return_value=MOCK_LATEST_RESULT_RESPONSE)
         client.async_get_recent_parameters = AsyncMock(return_value=MOCK_PARAMS_RESPONSE)
-        client.async_validate_commune = AsyncMock(return_value=True)
         yield client
 
 
@@ -212,4 +212,5 @@ def mock_water_quality_data() -> WaterQualityData:
         commune_info=commune_info,
         latest_reading=reading,
         parameters=params,
+        parameters_by_code=make_parameters_by_code(params),
     )
