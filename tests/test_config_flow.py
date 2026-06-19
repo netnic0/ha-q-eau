@@ -86,8 +86,6 @@ class TestUserFlow:
 
     async def test_successful_submission_creates_entry(self, hass: HomeAssistant):
         """Happy path: valid INSEE → probe succeeds → entry created."""
-        await self._start_form(hass)
-
         with patch(
             "custom_components.ha_q_eau.config_flow.HubEauClient",
             return_value=MagicMock(
@@ -189,14 +187,16 @@ class TestUserFlow:
     ):
         """Schema-level validation: non-5-digit INSEE codes raise vol.Invalid.
 
-        The voluptuous Match regex `^\\d{5}$` runs before the API probe, so the
-        flow should NOT call the Hub'Eau API at all for malformed inputs.
+        The voluptuous regex `^\\d{5}$` is declared on `_STEP_USER_SCHEMA` and
+        rendered to the HA UI which validates client-side BEFORE submitting.
+        However, programmatic flow.async_init(data={...}) bypasses that schema
+        and calls async_step_user(user_input={...}) directly. So we exercise
+        the schema in isolation here — that is the only place voluptuous fires
+        deterministically without going through the UI.
         """
         import voluptuous as vol
 
+        from custom_components.ha_q_eau.config_flow import _STEP_USER_SCHEMA
+
         with pytest.raises(vol.Invalid):
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_USER},
-                data={CONF_CODE_COMMUNE: "abcde"},  # not 5 digits
-            )
+            _STEP_USER_SCHEMA({CONF_CODE_COMMUNE: "abcde"})
