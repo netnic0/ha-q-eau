@@ -12,15 +12,20 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import HubEauClient
 from .const import CONF_CODE_COMMUNE, DOMAIN
-from .coordinator import QualiteEauCoordinator
+from .coordinator import QualiteEauConfigEntry, QualiteEauCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up ha_q_eau from a config entry."""
+async def async_setup_entry(hass: HomeAssistant, entry: QualiteEauConfigEntry) -> bool:
+    """Set up ha_q_eau from a config entry.
+
+    Stores the coordinator on `entry.runtime_data` (HA 2024.6+ pattern). HA
+    clears this attribute automatically when the entry unloads, so no manual
+    cleanup is required in `async_unload_entry`.
+    """
     session = async_get_clientsession(hass)
     client = HubEauClient(session)
 
@@ -28,23 +33,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: QualiteEauConfigEntry) -> bool:
     """Unload a config entry.
 
-    `hass.data` cleanup is unconditional: even on partial-unload failure we drop the
-    coordinator reference to avoid leaking it (mirrors the convention used by HA-core
-    integrations). `dict.pop(key, None)` is safe when the entry is already absent.
+    `entry.runtime_data` is HA-managed: it is cleared automatically when the
+    entry is unloaded, so we only need to drive the platform unload here.
     """
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
-    return unloaded
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -53,6 +55,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     Today there is only schema v1. The version guard below is forward-defensive:
     if a future release introduces v2 but this function is still the v1 stub,
     HA must refuse the downgrade rather than silently accept it.
+
+    Note: this function runs BEFORE `async_setup_entry`, so `entry.runtime_data`
+    is not populated yet — keep the bare `ConfigEntry` annotation here.
     """
     if entry.version > 1:
         _LOGGER.error(
@@ -76,6 +81,9 @@ async def async_remove_config_entry_device(
 
     A device whose identifier no longer matches the entry's commune (e.g. left
     over after a future commune change) is safe to delete.
+
+    Note: this function reads only `config_entry.data`, not `runtime_data` —
+    keep the bare `ConfigEntry` annotation here.
     """
     code_commune = config_entry.data.get(CONF_CODE_COMMUNE)
     active_identifier = (DOMAIN, code_commune)
@@ -83,5 +91,8 @@ async def async_remove_config_entry_device(
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload entry when options change."""
+    """Reload entry when options change.
+
+    Triggers a full setup/unload cycle — does not access `runtime_data`.
+    """
     await hass.config_entries.async_reload(entry.entry_id)

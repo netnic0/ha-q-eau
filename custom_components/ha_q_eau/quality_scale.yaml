@@ -32,11 +32,7 @@ rules:
     comment: No event-emitting entities; no async_added_to_hass listeners required.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: todo
-    comment: |
-      Currently using hass.data[DOMAIN][entry.entry_id]. Migration to
-      entry.runtime_data is planned for a follow-up PR (HA 2024.6+ pattern).
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done

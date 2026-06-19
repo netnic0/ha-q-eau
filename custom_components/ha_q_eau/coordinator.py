@@ -126,6 +126,15 @@ class QualiteEauCoordinator(DataUpdateCoordinator[WaterQualityData]):
         )
 
 
+# ── Typed config entry alias ────────────────────────────────────────────────
+# PEP 695 syntax (Python 3.12+). HA 2024.6+ stores integration runtime objects
+# on `entry.runtime_data` with this generic typing pattern, used by HA core
+# integrations since 2024.6. Functions that read `entry.runtime_data` should
+# annotate their entry parameter with this alias to give type-checkers the
+# coordinator type without an explicit cast.
+type QualiteEauConfigEntry = ConfigEntry[QualiteEauCoordinator]
+
+
 # ── Parsers ───────────────────────────────────────────────────────────────────
 
 

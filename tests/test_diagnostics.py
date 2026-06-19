@@ -94,7 +94,13 @@ class TestAsyncGetConfigEntryDiagnostics:
     async def test_returns_none_data_when_coordinator_missing(
         self, hass: HomeAssistant
     ):
-        """Entry without an active coordinator (edge case) returns None for data."""
+        """Entry without an active coordinator (edge case) returns None for data.
+
+        Models the pre-setup / ghost-entry scenario: the entry exists but
+        `async_setup_entry` has not run, so `runtime_data` was never set.
+        Diagnostics must not crash and must report None for both data and
+        last_update_success.
+        """
         entry = MagicMock(spec=ConfigEntry)
         entry.entry_id = "ghost_entry"
         entry.title = "Ghost"
@@ -103,7 +109,11 @@ class TestAsyncGetConfigEntryDiagnostics:
         entry.data = {CONF_CODE_COMMUNE: MOCK_CODE_COMMUNE}
         entry.options = {}
         entry.unique_id = MOCK_CODE_COMMUNE
-        # No coordinator registered for this entry_id.
+        # Explicitly clear runtime_data — MagicMock(spec=ConfigEntry) auto-creates
+        # the attribute as another MagicMock if it exists on the spec class, and
+        # we want a deterministic None to exercise the diagnostics fallback path.
+        entry.runtime_data = None
+
         diag = await async_get_config_entry_diagnostics(hass, entry)
         assert diag["coordinator"]["data"] is None
         assert diag["coordinator"]["last_update_success"] is None

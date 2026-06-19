@@ -14,20 +14,22 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import QualiteEauCoordinator
+from .coordinator import QualiteEauConfigEntry, QualiteEauCoordinator
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: QualiteEauConfigEntry
 ) -> dict[str, Any]:
-    """Return a JSON-serialisable dump of the entry + coordinator state."""
-    coordinator: QualiteEauCoordinator | None = hass.data.get(DOMAIN, {}).get(
-        entry.entry_id
-    )
+    """Return a JSON-serialisable dump of the entry + coordinator state.
+
+    `entry.runtime_data` is set by `async_setup_entry`; for an unloaded or
+    pre-setup entry HA leaves the attribute as the sentinel `UNDEFINED`.
+    `getattr(..., None)` collapses the sentinel to `None` so the diagnostics
+    dump degrades gracefully and remains JSON-serialisable.
+    """
+    coordinator: QualiteEauCoordinator | None = getattr(entry, "runtime_data", None)
 
     return {
         "entry": {
@@ -74,6 +76,13 @@ def _dump_data(coordinator: QualiteEauCoordinator | None) -> dict[str, Any] | No
 
 
 def _dataclass_to_jsonable(obj: Any) -> dict[str, Any]:
-    """asdict + stringify any datetime values for JSON serialisation."""
+    """asdict + stringify any datetime values for JSON serialisation.
+
+    Note: this is one-level only — it does NOT recurse into list/tuple
+    container values. The current data models have no `list[datetime]`
+    or `tuple[datetime, ...]` fields, so this is safe today. If the model
+    evolves to nest datetimes inside containers, this helper must be
+    upgraded to recursive descent.
+    """
     raw = asdict(obj)
     return {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in raw.items()}
