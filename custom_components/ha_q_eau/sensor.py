@@ -26,18 +26,16 @@ from .api.models import WaterQualityData
 from .const import (
     CONFORMITY_CODE_COMPLIANT,
     CONFORMITY_CODE_NON_COMPLIANT,
-    DOMAIN,
     PARAM_UNITS,
     TRACKED_PARAMS,
 )
 from .entity import QualiteEauEntity
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .coordinator import QualiteEauCoordinator
+    from .coordinator import QualiteEauConfigEntry, QualiteEauCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -328,11 +326,11 @@ class QualiteEauSensor(QualiteEauEntity, SensorEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: QualiteEauConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Register sensor entities for a config entry."""
-    coordinator: QualiteEauCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: QualiteEauCoordinator = entry.runtime_data
 
     entities: list[SensorEntity] = [
         QualiteEauSensor(coordinator, desc) for desc in CONFORMITY_SENSORS

@@ -61,13 +61,18 @@ async def _setup_integration(hass: HomeAssistant, data: dict):
 
 
 class TestAsyncSetupEntry:
-    async def test_setup_creates_coordinator_in_hass_data(
+    async def test_setup_stores_coordinator_on_runtime_data(
         self, hass: HomeAssistant, config_entry_data
     ):
+        """The coordinator is published on entry.runtime_data (HA 2024.6+)."""
         entry = await _setup_integration(hass, config_entry_data)
         assert entry.state == ConfigEntryState.LOADED
-        assert DOMAIN in hass.data
-        assert entry.entry_id in hass.data[DOMAIN]
+        # runtime_data is populated by async_setup_entry; nothing else owns it.
+        assert entry.runtime_data is not None
+        # Sanity check the type — the coordinator is a QualiteEauCoordinator.
+        from custom_components.ha_q_eau.coordinator import QualiteEauCoordinator
+
+        assert isinstance(entry.runtime_data, QualiteEauCoordinator)
 
     async def test_setup_registers_sensor_entities(
         self, hass: HomeAssistant, config_entry_data
@@ -96,28 +101,22 @@ class TestAsyncSetupEntry:
 
 
 class TestAsyncUnloadEntry:
-    async def test_unload_removes_coordinator(
+    async def test_unload_changes_state_to_not_loaded(
         self, hass: HomeAssistant, config_entry_data
     ):
+        """Unloading a loaded entry transitions it to NOT_LOADED.
+
+        With runtime_data, HA itself manages the lifetime of the coordinator
+        reference — there is no `hass.data[DOMAIN][entry.entry_id]` to clean
+        up, so the only observable post-unload invariant is the entry state.
+        """
         entry = await _setup_integration(hass, config_entry_data)
-        assert entry.entry_id in hass.data.get(DOMAIN, {})
+        assert entry.state == ConfigEntryState.LOADED
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
         assert entry.state == ConfigEntryState.NOT_LOADED
-        assert entry.entry_id not in hass.data.get(DOMAIN, {})
-
-    async def test_unload_safe_when_domain_missing(
-        self, hass: HomeAssistant, config_entry_data
-    ):
-        """async_unload_entry must not raise if hass.data[DOMAIN] is absent."""
-        entry = await _setup_integration(hass, config_entry_data)
-        hass.data.pop(DOMAIN, None)
-
-        # Should not raise
-        result = await hass.config_entries.async_unload(entry.entry_id)
-        assert result
 
 
 class TestAsyncRemoveConfigEntryDevice:
