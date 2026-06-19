@@ -7,10 +7,11 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import HubEauClient
-from .const import DOMAIN
+from .const import CONF_CODE_COMMUNE, DOMAIN
 from .coordinator import QualiteEauCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +60,26 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
     return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Allow removal of a device only when it no longer matches the active entry.
+
+    This integration creates exactly one device per config entry, identified by
+    `(DOMAIN, code_commune)`. As long as that identifier matches the active entry,
+    the device represents the current commune and must NOT be deletable from the
+    HA UI — otherwise the entity would re-appear orphaned on next refresh.
+
+    A device whose identifier no longer matches the entry's commune (e.g. left
+    over after a future commune change) is safe to delete.
+    """
+    code_commune = config_entry.data.get(CONF_CODE_COMMUNE)
+    active_identifier = (DOMAIN, code_commune)
+    return active_identifier not in device_entry.identifiers
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

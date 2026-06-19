@@ -118,3 +118,42 @@ class TestAsyncUnloadEntry:
         # Should not raise
         result = await hass.config_entries.async_unload(entry.entry_id)
         assert result
+
+
+class TestAsyncRemoveConfigEntryDevice:
+    """Silver `stale-devices` rule: only allow device removal when stale."""
+
+    async def test_rejects_active_device(
+        self, hass: HomeAssistant, config_entry_data
+    ):
+        """A device whose identifier matches the entry's commune must NOT be deletable."""
+        from homeassistant.helpers import device_registry as dr
+
+        from custom_components.ha_q_eau import async_remove_config_entry_device
+
+        entry = await _setup_integration(hass, config_entry_data)
+        device_registry = dr.async_get(hass)
+        # The integration created exactly one device for this commune.
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, MOCK_CODE_COMMUNE)}
+        )
+        assert device is not None
+
+        result = await async_remove_config_entry_device(hass, entry, device)
+        assert result is False
+
+    async def test_accepts_stale_device(
+        self, hass: HomeAssistant, config_entry_data
+    ):
+        """A device whose identifier no longer matches the entry's commune is removable."""
+        from homeassistant.helpers import device_registry as dr
+
+        from custom_components.ha_q_eau import async_remove_config_entry_device
+
+        entry = await _setup_integration(hass, config_entry_data)
+        # Build a synthetic device entry with a non-matching identifier.
+        stale_device = MagicMock(spec=dr.DeviceEntry)
+        stale_device.identifiers = {(DOMAIN, "00000")}  # not MOCK_CODE_COMMUNE
+
+        result = await async_remove_config_entry_device(hass, entry, stale_device)
+        assert result is True

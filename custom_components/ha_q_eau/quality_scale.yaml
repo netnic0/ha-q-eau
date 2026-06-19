@@ -1,0 +1,111 @@
+# Home Assistant Quality Scale declaration for ha_q_eau.
+#
+# Lists the status of each rule from the Integration Quality Scale
+# (https://developers.home-assistant.io/docs/core/integration-quality-scale/).
+#
+# - `done`   — rule satisfied; implementation present and tested.
+# - `exempt` — rule does not apply to this integration; reason given.
+# - `todo`   — rule is on the roadmap but not yet implemented.
+#
+# This file is informational. Bumping `quality_scale` in manifest.json is what
+# actually advertises the tier to users in the Home Assistant UI.
+
+rules:
+  # ── Bronze (already satisfied) ─────────────────────────────────────────────
+  action-setup:
+    status: exempt
+    comment: Integration registers no services; no Action handlers needed.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No services; nothing to document.
+  docs-high-quality: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: No event-emitting entities; no async_added_to_hass listeners required.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: todo
+    comment: |
+      Currently using hass.data[DOMAIN][entry.entry_id]. Migration to
+      entry.runtime_data is planned for a follow-up PR (HA 2024.6+ pattern).
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # ── Silver ─────────────────────────────────────────────────────────────────
+  action-exceptions:
+    status: exempt
+    comment: No services; no action handlers to raise typed exceptions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      Hub'Eau is a public open-data API (no authentication, no API key).
+      There is nothing to reauthenticate.
+  test-coverage: done
+
+  # ── Gold (roadmap) ─────────────────────────────────────────────────────────
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: No discovery (no mDNS/SSDP/USB); commune is user-supplied.
+  discovery:
+    status: exempt
+    comment: No discovery — INSEE commune codes cannot be discovered automatically.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: One device per config entry; communes are static.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities are useful to all users; no rationale to disable any.
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: Errors raised in config flow use raw strings; will be migrated to translation keys.
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Options flow handles polling interval. A full reconfiguration flow
+      to change the INSEE code in-place (instead of removing + re-adding)
+      is planned.
+  repair-issues:
+    status: exempt
+    comment: |
+      Stale data is surfaced via `data_age_hours` sensor; no automated repair
+      action is meaningful (Hub'Eau publishes monthly, users cannot accelerate).
+  stale-devices: done
+
+  # ── Platinum (out of scope for now) ───────────────────────────────────────
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: |
+      Type hints are pervasive but no `mypy --strict` CI gate. Targeted for
+      a future hardening pass once the integration stabilises.
