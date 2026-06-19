@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/netnic0/ha-q-eau/compare/ha-q-eau-v0.4.0...ha-q-eau-v0.4.1) (2026-06-19)
+
+
+### Bug Fixes
+
+* **diagnostics:** gate runtime_data read on entry.state == LOADED ([#9](https://github.com/netnic0/ha-q-eau/issues/9)) ([fa3dec5](https://github.com/netnic0/ha-q-eau/commit/fa3dec522d2d12aba4c2ff13f670df5390f4219b))
+
 ## [0.4.0](https://github.com/netnic0/ha-q-eau/compare/ha-q-eau-v0.3.0...ha-q-eau-v0.4.0) (2026-06-19)
 
 
