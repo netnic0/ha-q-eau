@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/netnic0/ha-q-eau/compare/ha-q-eau-v0.4.1...ha-q-eau-v0.4.2) (2026-06-22)
+
+
+### Bug Fixes
+
+* **const:** correct Sandre code for turbidity (1301 -&gt; 1295) ([#11](https://github.com/netnic0/ha-q-eau/issues/11)) ([030e650](https://github.com/netnic0/ha-q-eau/commit/030e650becc8311f8d9347cf1755a1e858d46ca6))
+
 ## [0.4.1](https://github.com/netnic0/ha-q-eau/compare/ha-q-eau-v0.4.0...ha-q-eau-v0.4.1) (2026-06-19)
 
 
