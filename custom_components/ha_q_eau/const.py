@@ -44,7 +44,10 @@ CONFORMITY_CODE_MAP: Final[dict[str, str]] = {
 # ── Tracked parameter Sandre codes → sensor key ──────────────────────────────
 # Only these parameters get dedicated sensor entities.
 PARAM_NITRATES: Final[str] = "1340"
-PARAM_TURBIDITY: Final[str] = "1301"
+# Sandre code 1295 = "Turbidité Formazine néphélométrique" (NFU).
+# Do NOT use 1301 — that is "Température de l'eau" (°C) in the Sandre référentiel,
+# which would make `param_turbidity` publish water temperature instead of turbidity.
+PARAM_TURBIDITY: Final[str] = "1295"
 PARAM_PH: Final[str] = "1302"
 PARAM_ECOLI: Final[str] = "1449"
 PARAM_ENTEROCOCCUS: Final[str] = "1450"
