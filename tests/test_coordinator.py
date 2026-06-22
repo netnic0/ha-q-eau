@@ -12,7 +12,7 @@ from custom_components.ha_q_eau.coordinator import (
     _parse_latest_result,
     _parse_parameters,
 )
-from custom_components.ha_q_eau.const import PARAM_NITRATES, PARAM_PH
+from custom_components.ha_q_eau.const import PARAM_NITRATES, PARAM_PH, PARAM_TURBIDITY
 
 from .conftest import (
     MOCK_CODE_COMMUNE,
@@ -145,3 +145,41 @@ class TestParseParameters:
         result = _parse_parameters(raw)
         assert result[0].resultat_numerique is None
         assert result[0].resultat_alphanumerique == "<ld"
+
+    def test_parse_parameters_turbidity_not_confused_with_temperature(self):
+        """Regression test: ensure Sandre code 1295 (turbidity NFU) is tracked,
+        and code 1301 (water temperature in °C) is correctly filtered out.
+
+        Before the 0.4.1 fix, PARAM_TURBIDITY was wrongly mapped to "1301",
+        which made `sensor.param_turbidity` publish water temperature.
+        """
+        assert PARAM_TURBIDITY == "1295", "PARAM_TURBIDITY must be Sandre code 1295"
+        raw = {
+            "data": [
+                {
+                    "code_parametre": PARAM_TURBIDITY,
+                    "libelle_parametre": "Turbidité Formazine néphélométrique",
+                    "resultat_numerique": 0.5,
+                    "resultat_alphanumerique": "0.5",
+                    "libelle_unite": "NFU",
+                    "limite_qualite_parametre": "<=1 NFU",
+                    "date_prelevement": "2026-04-30T10:00:00",
+                },
+                {
+                    "code_parametre": "1301",  # Température de l'eau — untracked
+                    "libelle_parametre": "Température de l'eau",
+                    "resultat_numerique": 18.0,
+                    "resultat_alphanumerique": "18",
+                    "libelle_unite": "°C",
+                    "limite_qualite_parametre": "<=25 °C",
+                    "date_prelevement": "2026-04-30T10:00:00",
+                },
+            ]
+        }
+        result = _parse_parameters(raw)
+        codes = {p.code_parametre for p in result}
+        assert PARAM_TURBIDITY in codes
+        assert "1301" not in codes
+        turbidity = next(p for p in result if p.code_parametre == PARAM_TURBIDITY)
+        assert turbidity.resultat_numerique == 0.5
+        assert turbidity.libelle_unite == "NFU"
